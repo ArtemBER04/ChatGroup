@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ChatGroup</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- Экран входа / регистрации -->
+  <div id="auth-screen" class="auth-screen">
+    <div class="auth-card glass">
+      <h1 class="auth-title">ChatGroup</h1>
+      <p class="auth-subtitle">Войдите или создайте аккаунт</p>
+      <form id="auth-form" class="auth-form">
+        <label class="field-label" for="username">Имя пользователя</label>
+        <input
+          id="username"
+          type="text"
+          class="input-field"
+          placeholder="Введите имя"
+          autocomplete="username"
+          required
+        />
+        <label class="field-label" for="password">Пароль</label>
+        <input
+          id="password"
+          type="password"
+          class="input-field"
+          placeholder="Введите пароль"
+          autocomplete="current-password"
+          required
+        />
+        <p id="auth-error" class="auth-error" hidden></p>
+        <button type="submit" class="btn btn-primary">Войти / Создать аккаунт</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Главный экран после входа -->
+  <div id="app-screen" class="app-screen" hidden>
+    <header class="app-header">
+      <div class="header-inner">
+        <span class="header-logo">ChatGroup</span>
+        <span id="header-user" class="header-user"></span>
+        <button type="button" id="btn-profile" class="btn btn-ghost">Профиль</button>
+        <button type="button" id="btn-settings" class="btn btn-ghost">Настройки</button>
+        <button type="button" id="btn-logout" class="btn btn-ghost">Выйти</button>
+      </div>
+    </header>
+
+    <main class="app-main">
+      <!-- Левая панель: список чатов -->
+      <aside class="sidebar glass">
+        <div class="sidebar-head">
+          <h2 class="sidebar-title">Чаты</h2>
+          <button type="button" id="btn-add-chat" class="btn-icon" title="Новый чат" aria-label="Создать новый чат">+</button>
+        </div>
+        <ul id="chat-list" class="chat-list"></ul>
+      </aside>
+
+      <!-- Центр: лента сообщений (как в Discord — все слева) -->
+      <section class="chat-area">
+        <div class="chat-toolbar glass">
+          <h2 id="current-chat-title" class="current-chat-title">Выберите или создайте чат</h2>
+          <div class="chat-toolbar-actions">
+            <button type="button" id="btn-video-call" class="btn btn-secondary btn-toolbar" title="Видеозвонок" hidden>Видеозвонок</button>
+            <button type="button" id="btn-leave-group" class="btn btn-ghost btn-toolbar" title="Покинуть группу" hidden>Покинуть группу</button>
+            <button type="button" id="btn-delete-chat" class="btn btn-danger btn-toolbar" title="Удалить чат для всех" hidden>Удалить чат</button>
+          </div>
+        </div>
+
+        <div id="messages-container" class="messages-container"></div>
+
+        <div class="composer glass">
+          <input type="file" id="photo-input" accept="image/*" hidden />
+          <button type="button" id="btn-attach-photo" class="btn btn-secondary btn-attach" title="Отправить фото" hidden>Фото</button>
+          <input
+            id="message-input"
+            type="text"
+            class="input-field composer-input"
+            placeholder="Напишите сообщение..."
+            maxlength="2000"
+          />
+          <button type="button" id="btn-send" class="btn btn-primary">Отправить</button>
+        </div>
+      </section>
+
+      <!-- Справа: участники чата -->
+      <aside class="members-panel glass">
+        <div class="members-head">
+          <h2 class="members-title">Участники</h2>
+          <button type="button" id="btn-add-member" class="btn btn-secondary btn-compact">Добавить</button>
+        </div>
+        <ul id="members-list" class="members-list"></ul>
+      </aside>
+    </main>
+  </div>
+
+  <!-- Профиль на весь экран -->
+  <div id="profile-fullscreen" class="profile-fullscreen" hidden>
+    <header class="profile-fs-header glass">
+      <button type="button" id="profile-fs-back" class="btn btn-ghost">← Назад</button>
+      <h2 class="profile-fs-title">Профиль</h2>
+      <span class="profile-fs-spacer"></span>
+    </header>
+    <div class="profile-fs-scroll">
+      <div class="profile-fs-inner">
+        <p class="modal-hint profile-fs-intro">
+          Данные хранятся локально в браузере (заглушка).
+        </p>
+        <label class="field-label" for="profile-username">Имя пользователя</label>
+        <input id="profile-username" type="text" class="input-field" readonly />
+        <p class="modal-hint">Имя задаётся при регистрации и везде отображается таким, каким вы его указали (оно должно быть свободно при создании аккаунта).</p>
+        <label class="field-label" for="profile-about">О себе</label>
+        <textarea
+          id="profile-about"
+          class="input-field textarea-field"
+          placeholder="Несколько слов о себе"
+          maxlength="500"
+          rows="5"
+        ></textarea>
+        <div class="profile-fs-actions">
+          <button type="button" id="profile-save" class="btn btn-primary">Сохранить</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Добавить участника в чат -->
+  <div id="modal-add-member-overlay" class="modal-overlay" hidden>
+    <div class="modal glass modal-dialog">
+      <h3 class="modal-title">Добавить участника</h3>
+      <p class="modal-hint">Укажите логин зарегистрированного пользователя (как при входе).</p>
+      <label class="field-label" for="add-member-username">Имя пользователя</label>
+      <input
+        id="add-member-username"
+        type="text"
+        class="input-field"
+        placeholder="Например: alex"
+        autocomplete="off"
+      />
+      <p id="add-member-error" class="auth-error" hidden></p>
+      <div id="add-member-confirm-block" class="add-member-confirm" hidden>
+        <p id="add-member-confirm-text" class="add-member-confirm-text"></p>
+        <button type="button" id="add-member-confirm-yes" class="btn btn-primary">Добавить в чат</button>
+      </div>
+      <div class="modal-actions">
+        <button type="button" id="add-member-cancel" class="btn btn-ghost">Закрыть</button>
+        <button type="button" id="add-member-check" class="btn btn-secondary">Найти</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Модальное окно: настройки -->
+  <div id="modal-settings-overlay" class="modal-overlay" hidden>
+    <div class="modal glass modal-dialog">
+      <h3 class="modal-title">Настройки</h3>
+      <p class="modal-hint">Переключатели сохраняются в localStorage (демо).</p>
+      <label class="settings-row">
+        <input type="checkbox" id="setting-compact-list" />
+        <span>Компактный список чатов</span>
+      </label>
+      <label class="settings-row">
+        <input type="checkbox" id="setting-notify-mock" />
+        <span>«Уведомления» (имитация, без реальных push)</span>
+      </label>
+      <label class="settings-row">
+        <input type="checkbox" id="setting-sound-mock" />
+        <span>«Звук сообщений» (имитация)</span>
+      </label>
+      <div class="settings-color-block">
+        <span class="field-label">Цвет профиля</span>
+        <p class="modal-hint settings-color-hint">Фон под вашим именем в списке участников и в карточке профиля.</p>
+        <div class="settings-color-row">
+          <input type="color" id="setting-profile-color" value="#5288c1" title="Выбор цвета" />
+          <span id="setting-profile-color-hex" class="color-hex-label">#5288c1</span>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" id="settings-close" class="btn btn-primary">Готово</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Карточка участника (⋯) -->
+  <div id="member-popover-backdrop" class="member-popover-backdrop" hidden tabindex="-1"></div>
+  <div id="member-popover" class="member-popover glass" hidden role="dialog" aria-label="Карточка участника">
+    <div id="member-popover-header" class="member-popover-header">
+      <span id="member-popover-name" class="member-popover-name"></span>
+    </div>
+    <p class="field-label">Имя пользователя</p>
+    <p id="member-popover-login" class="member-popover-login"></p>
+    <p class="field-label">О себе</p>
+    <p id="member-popover-about" class="member-popover-about"></p>
+    <div id="member-popover-actions" class="member-popover-actions" hidden>
+      <button type="button" id="member-btn-remove" class="btn btn-danger btn-block">Удалить из группы</button>
+      <button type="button" id="member-btn-admin" class="btn btn-secondary btn-block">Сделать админом</button>
+    </div>
+    <button type="button" id="member-popover-close" class="btn btn-ghost btn-block member-popover-close-btn">Закрыть</button>
+  </div>
+
+  <!-- Видеозвонок (локальное превью, без сервера) -->
+  <div id="modal-video-overlay" class="modal-overlay" hidden>
+    <div class="modal glass modal-dialog video-call-dialog">
+      <h3 class="modal-title">Видеозвонок</h3>
+      <p class="modal-hint">
+        Это демо: без своего сервера и сигналинга «настоящий» звонок между людьми невозможен. Ниже — только ваше
+        локальное превью с камеры (если разрешите доступ).
+      </p>
+      <div id="video-wrap" class="video-wrap">
+        <video id="video-local-preview" class="video-local" autoplay playsinline muted></video>
+        <p id="video-call-hint" class="video-placeholder">Камера выключена или недоступна</p>
+      </div>
+      <div class="modal-actions">
+        <button type="button" id="video-call-end" class="btn btn-danger">Завершить</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Модальное окно: новый чат -->
+  <div id="modal-overlay" class="modal-overlay" hidden>
+    <div class="modal glass modal-dialog">
+      <h3 class="modal-title">Новый чат</h3>
+      <label class="field-label" for="new-chat-name">Название чата</label>
+      <input
+        id="new-chat-name"
+        type="text"
+        class="input-field"
+        placeholder="Например: Проект А"
+        maxlength="100"
+      />
+      <p id="modal-error" class="auth-error" hidden></p>
+      <div class="modal-actions">
+        <button type="button" id="modal-cancel" class="btn btn-ghost">Отмена</button>
+        <button type="button" id="modal-create" class="btn btn-primary">Создать</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.socket.io/4.8.1/socket.io.min.js" crossorigin="anonymous"></script>
+  <script src="app.js"></script>
+</body>
+</html>
