@@ -2,7 +2,7 @@
  * ChatGroup — клиент: REST API + Socket.IO (http://151.242.88.37:3000).
  * Профиль и настройки UI остаются в localStorage.
  */
-const API_BASE = "http://79.141.215.15:3000";
+const API_BASE = "https://79.141.215.15";
 
 const STORAGE_KEYS = {
   TOKEN: "chatgroup_jwt",
